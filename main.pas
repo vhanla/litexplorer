@@ -22,7 +22,8 @@ uses
   ACL.UI.Controls.TreeList.Types, ACL.UI.Controls.BaseEditors,
   ACL.UI.Controls.TextEdit, ACL.UI.Controls.SearchBox, MPShellUtilities,
   rkSmartTabs, GR32_Image, GR32_Layers, PDFium.Control,
-  Helpers, libpng, pngloader, LibTurboJPEG, jpegloader, Vcl.WinXPanels;
+  Helpers, libpng, pngloader, LibTurboJPEG, jpegloader, Vcl.WinXPanels,
+  CB.AppStartup, DataModule;
 
 const
   CM_UpdateView = WM_USER + 2102; // Custom Message...
@@ -357,6 +358,7 @@ type
     CellShade4: TColor;
     CellBkgColor: TColor;
     CellBrdColor: array [Boolean, Boolean] of TColor;
+    procedure DelayedStartup;
   end;
 
 var
@@ -1303,6 +1305,108 @@ begin
   end);
 end;
 
+procedure TForm1.DelayedStartup;
+var
+  hImagList16, hImagList32: NativeUInt;
+  ShInfo1: TSHFileInfo;
+  icHgt, icWid: Integer;
+  repoPath: string;
+begin
+  hImagList32 := SHGetFileInfo('file.txt', FILE_ATTRIBUTE_NORMAL, ShInfo1,
+    SizeOf(ShInfo1),
+    SHGFI_LARGEICON or SHGFI_SYSICONINDEX or SHGFI_USEFILEATTRIBUTES);
+
+  hImagList16 := SHGetFileInfo('file.txt', FILE_ATTRIBUTE_NORMAL, ShInfo1,
+    SizeOf(ShInfo1),
+    SHGFI_SMALLICON or SHGFI_SYSICONINDEX or SHGFI_USEFILEATTRIBUTES);
+
+  FhImageList48 := hImagList16 + (hImagList16 - hImagList32);
+  if ImageList_GetIconSize(FhImageList48, icHgt, icWid) and (icHgt = 48) then
+    FIconSize := 48
+  else
+  begin
+    FhImageList48 := hImagList32;
+    if ImageList_GetIconSize(hImagList32, icHgt, icWid) then
+      FIconSize := icHgt
+    else
+      FIconSize := 32;
+  end;
+
+  Items := TList.Create;
+  // Max thumbnail size...
+  ThumbSizeW := 255;
+  ThumbSizeH := 255;
+  rkView1.CellWidth := ThumbSizeW + 20;
+  rkView1.CellHeight := ThumbSizeH + 40;
+  CellJpeg := TJpegImage.Create;
+  CellJpeg.Performance := jpBestSpeed;
+  GenCellColors;
+  CellStyle := -1;
+  PoolSize := 0;
+  MaxPool := Round(((Screen.Width * Screen.Height) * 3) * 1.5);
+  Items := TList.Create;
+  ThumbsPool := TList.Create;
+
+  TrackBar1.Min := 31;
+  TrackBar1.Max := 255;
+  TrackBar1.Position := 127;
+
+  OpenDir('t:\users\vhanl\pictures\kaliman\firefly');
+
+  MPlayer := TMPVBasePlayer.Create;
+  MPlayer.OnProgress := OnMPlayerProgress;
+  MPlayer.OnStateChged := OnMPlayerStateChanged;
+  MPlayer.InitPlayer(IntToStr(pnlMPV.Handle), '', '', '', True, 0.05); //0.05 for smooth 20fps progress events
+
+
+  // thumbnails repo
+  repoPath := TPath.Combine(TPath.GetCachePath, 'ThumbCache');
+
+  if not DirectoryExists(repoPath) then
+    ForceDirectories(repoPath);
+
+  VirtualExplorerEasyListview1.ThumbsManager.StorageRepositoryFolder := IncludeTrailingPathDelimiter(repoPath);
+  VirtualMultiPathExplorerEasyListview1.ThumbsManager.StorageRepositoryFolder := IncludeTrailingPathDelimiter(repoPath);
+
+  VirtualExplorerEasyListview1.IncrementalSearch.Enabled  := True;     // for selecting/jumping to a file that matches
+
+  // sort by date
+//  VirtualExplorerEasyListview1.Header.Columns[3].SortDirection := esdDescending;
+//  VirtualExplorerEasyListview1.Sort.SortAll;
+  VirtualExplorerEasyListview1.DefaultSortColumn := 3;
+  VirtualExplorerEasyListview1.DefaultSortDir := esdDescending;
+
+  // Fuzzy Search
+  FFF := TDelphiFFF.Create;
+  FBridge := TFFFUIBridge.Create(FFF, OnSearchUpdate);
+
+//  ListView1.OwnerData := True;
+//  ListView1.ViewStyle := vsReport;
+//  ListView1.Columns.Clear;
+//  ListView1.Columns.Add.Caption := 'Name';
+//  ListView1.Columns.Add.Caption := 'Path';
+//  ListView1.Columns.Add.Caption := 'Score';
+  SetLength(FCachedResults, 0);
+
+  VirtualMultiPathExplorerEasyListview1.BeginUpdate;
+  try
+    VirtualMultiPathExplorerEasyListview1.Active := True;
+//    VirtualMultiPathExplorerEasyListview1.Options := VirtualMultiPathExplorerEasyListview1.Options + [elothre
+    with VirtualMultiPathExplorerEasyListview1.Header.Columns.AddCustom(TExplorerColumn) as TExplorerColumn do
+    begin
+      Caption := 'Score';
+      Width := 80;
+    end;
+  finally
+    VirtualMultiPathExplorerEasyListview1.EndUpdate();
+  end;
+
+  rkAeroTabs1.tabstyle := tsModernRect;
+//  rkAeroTabs1.TitleBar := True;
+
+  RegisterWithSeer;
+end;
+
 procedure TForm1.DirectoryScan(const APath: string);
 begin
   if not DirectoryExists(APath) then
@@ -2126,107 +2230,12 @@ begin
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
-var
-  hImagList16, hImagList32: NativeUInt;
-  ShInfo1: TSHFileInfo;
-  icHgt, icWid: Integer;
-  repoPath: string;
 begin
+  AppServices.CBAppStartup1.NotifyUIVisible;
+
   SetDarkMode(Handle, True);
 
-  hImagList32 := SHGetFileInfo('file.txt', FILE_ATTRIBUTE_NORMAL, ShInfo1,
-    SizeOf(ShInfo1),
-    SHGFI_LARGEICON or SHGFI_SYSICONINDEX or SHGFI_USEFILEATTRIBUTES);
-
-  hImagList16 := SHGetFileInfo('file.txt', FILE_ATTRIBUTE_NORMAL, ShInfo1,
-    SizeOf(ShInfo1),
-    SHGFI_SMALLICON or SHGFI_SYSICONINDEX or SHGFI_USEFILEATTRIBUTES);
-
-  FhImageList48 := hImagList16 + (hImagList16 - hImagList32);
-  if ImageList_GetIconSize(FhImageList48, icHgt, icWid) and (icHgt = 48) then
-    FIconSize := 48
-  else
-  begin
-    FhImageList48 := hImagList32;
-    if ImageList_GetIconSize(hImagList32, icHgt, icWid) then
-      FIconSize := icHgt
-    else
-      FIconSize := 32;
-  end;
-
-  Items := TList.Create;
-  // Max thumbnail size...
-  ThumbSizeW := 255;
-  ThumbSizeH := 255;
-  rkView1.CellWidth := ThumbSizeW + 20;
-  rkView1.CellHeight := ThumbSizeH + 40;
-  CellJpeg := TJpegImage.Create;
-  CellJpeg.Performance := jpBestSpeed;
-  GenCellColors;
-  CellStyle := -1;
-  PoolSize := 0;
-  MaxPool := Round(((Screen.Width * Screen.Height) * 3) * 1.5);
-  Items := TList.Create;
-  ThumbsPool := TList.Create;
-
-  TrackBar1.Min := 31;
-  TrackBar1.Max := 255;
-  TrackBar1.Position := 127;
-
-  OpenDir('t:\users\vhanl\pictures\kaliman\firefly');
-
-  MPlayer := TMPVBasePlayer.Create;
-  MPlayer.OnProgress := OnMPlayerProgress;
-  MPlayer.OnStateChged := OnMPlayerStateChanged;
-  MPlayer.InitPlayer(IntToStr(pnlMPV.Handle), '', '', '', True, 0.05); //0.05 for smooth 20fps progress events
-
-
-  // thumbnails repo
-  repoPath := TPath.Combine(TPath.GetCachePath, 'ThumbCache');
-
-  if not DirectoryExists(repoPath) then
-    ForceDirectories(repoPath);
-
-  VirtualExplorerEasyListview1.ThumbsManager.StorageRepositoryFolder := IncludeTrailingPathDelimiter(repoPath);
-  VirtualMultiPathExplorerEasyListview1.ThumbsManager.StorageRepositoryFolder := IncludeTrailingPathDelimiter(repoPath);
-
-  VirtualExplorerEasyListview1.IncrementalSearch.Enabled  := True;     // for selecting/jumping to a file that matches
-
-  // sort by date
-//  VirtualExplorerEasyListview1.Header.Columns[3].SortDirection := esdDescending;
-//  VirtualExplorerEasyListview1.Sort.SortAll;
-  VirtualExplorerEasyListview1.DefaultSortColumn := 3;
-  VirtualExplorerEasyListview1.DefaultSortDir := esdDescending;
-
-  // Fuzzy Search
-  FFF := TDelphiFFF.Create;
-  FBridge := TFFFUIBridge.Create(FFF, OnSearchUpdate);
-
-//  ListView1.OwnerData := True;
-//  ListView1.ViewStyle := vsReport;
-//  ListView1.Columns.Clear;
-//  ListView1.Columns.Add.Caption := 'Name';
-//  ListView1.Columns.Add.Caption := 'Path';
-//  ListView1.Columns.Add.Caption := 'Score';
-  SetLength(FCachedResults, 0);
-
-  VirtualMultiPathExplorerEasyListview1.BeginUpdate;
-  try
-    VirtualMultiPathExplorerEasyListview1.Active := True;
-//    VirtualMultiPathExplorerEasyListview1.Options := VirtualMultiPathExplorerEasyListview1.Options + [elothre
-    with VirtualMultiPathExplorerEasyListview1.Header.Columns.AddCustom(TExplorerColumn) as TExplorerColumn do
-    begin
-      Caption := 'Score';
-      Width := 80;
-    end;
-  finally
-    VirtualMultiPathExplorerEasyListview1.EndUpdate();
-  end;
-
-  rkAeroTabs1.tabstyle := tsModernRect;
-//  rkAeroTabs1.TitleBar := True;
-
-  RegisterWithSeer;
+  //DelayedStartup is triggered to initialize delayed things
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);

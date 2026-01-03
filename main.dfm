@@ -163,10 +163,6 @@ object Form1: TForm1
       ActiveCard = crdAudiovisual
       Caption = 'cardViewers'
       TabOrder = 0
-      ExplicitLeft = 112
-      ExplicitTop = 336
-      ExplicitWidth = 300
-      ExplicitHeight = 200
       object crdImages: TCard
         Left = 1
         Top = 1
@@ -175,10 +171,6 @@ object Form1: TForm1
         Caption = 'crdImages'
         CardIndex = 0
         TabOrder = 0
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
         object ImgView321: TImgView32
           Left = 0
           Top = 0
@@ -199,7 +191,6 @@ object Form1: TForm1
           OnMouseMove = ImgView321MouseMove
           OnMouseUp = ImgView321MouseUp
           OnMouseWheel = ImgView321MouseWheel
-          ExplicitHeight = 706
         end
       end
       object crdAudiovisual: TCard
@@ -210,17 +201,13 @@ object Form1: TForm1
         Caption = 'crdAudiovisual'
         CardIndex = 1
         TabOrder = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
         object pnlMPV: TPanel
           Left = 0
           Top = 0
           Width = 223
           Height = 706
           Align = alClient
-          Caption = 'pnlMPV'
+          Caption = 'Loading Preview'
           TabOrder = 0
         end
         object ACLSliderMPV: TACLSlider
@@ -243,10 +230,6 @@ object Form1: TForm1
         Caption = 'crdPDFs'
         CardIndex = 2
         TabOrder = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
         object PDFiumControl1: TPDFiumControl
           Left = 0
           Top = 0
@@ -266,7 +249,6 @@ object Form1: TForm1
           SearchWholeWords = False
           Visible = False
           ZoomPercent = 100.00000000000000000
-          ExplicitHeight = 706
         end
       end
       object crdTexts: TCard
@@ -277,10 +259,6 @@ object Form1: TForm1
         Caption = 'crdTexts'
         CardIndex = 3
         TabOrder = 3
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
       end
       object crdHTML: TCard
         Left = 1
@@ -290,10 +268,6 @@ object Form1: TForm1
         Caption = 'crdHTML'
         CardIndex = 4
         TabOrder = 4
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
       end
       object crdHex: TCard
         Left = 1
@@ -303,10 +277,6 @@ object Form1: TForm1
         Caption = 'crdHex'
         CardIndex = 5
         TabOrder = 5
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
       end
       object crdProperties: TCard
         Left = 1
@@ -316,10 +286,6 @@ object Form1: TForm1
         Caption = 'crdProperties'
         CardIndex = 6
         TabOrder = 6
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
       end
     end
   end
@@ -354,10 +320,6 @@ object Form1: TForm1
     BevelOuter = bvNone
     Caption = 'CardPanel1'
     TabOrder = 5
-    ExplicitLeft = 8
-    ExplicitTop = 59
-    ExplicitWidth = 544
-    ExplicitHeight = 697
     object crdExplorer: TCard
       Left = 0
       Top = 0
@@ -366,8 +328,6 @@ object Form1: TForm1
       Caption = 'crdExplorer'
       CardIndex = 0
       TabOrder = 0
-      ExplicitWidth = 544
-      ExplicitHeight = 697
       object gbMainContent: TACLGroupBox
         Left = 0
         Top = 0
@@ -377,8 +337,6 @@ object Form1: TForm1
         TabOrder = 0
         Borders = []
         Caption = ''
-        ExplicitLeft = 208
-        ExplicitTop = 30
         object VirtualShellToolbar1: TVirtualShellToolbar
           Left = 8
           Top = 8
